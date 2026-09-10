@@ -1,0 +1,34 @@
+# Local environments
+.venv/
+.venv_cuda/
+venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+
+# Raw and derived datasets
+datasets/raw/
+datasets/**/*.mat
+datasets/**/*.xls
+datasets/**/*.xlsx
+*.mat
+*.xls
+*.xlsx
+
+# Experiment outputs and model weights
+checkpoints/
+results/
+logs/
+*.pt
+*.pth
+*.ckpt
+*.npz
+*.npy
+*.pkl
+
+# Local IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
