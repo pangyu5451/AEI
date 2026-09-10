@@ -87,6 +87,18 @@ def test_assign_items_breaks_all_contribution_ties_by_feature_index():
     assert [item.color for item in items[-20:]] == ["red"] * 20
 
 
+def test_assign_items_maps_higher_contribution_toward_red():
+    contribution = torch.linspace(0.0, 1.0, 512).unsqueeze(0)
+    contribution[0, 0], contribution[0, -1] = 1.0, 0.0
+    stability = torch.ones_like(contribution)
+    redundancy = torch.zeros_like(contribution)
+
+    items = feature_combination.assign_items(contribution, stability, redundancy)[0]
+
+    assert items[0].color == "red"
+    assert items[-1].color == "gray"
+
+
 def test_assign_items_reverses_red_size_preference_at_median_equality():
     contribution, stability, redundancy = _scores()
     stability[:, -20:] = 1.0

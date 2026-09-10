@@ -66,7 +66,7 @@ def _validate_scores(scores, name):
 
 def _assign_record(c_values, s_values, r_values):
     utilities = [c * s * (1.0 - r) for c, s, r in zip(c_values, s_values, r_values)]
-    ranked_indices = sorted(range(512), key=lambda index: (-c_values[index], index))
+    ranked_indices = sorted(range(512), key=lambda index: (c_values[index], index))
     assigned_colors = {}
     cursor = 0
     for color, quota in _COLOR_QUOTAS:
