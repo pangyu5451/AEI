@@ -57,6 +57,31 @@ run 的 `results/<run_id>` 与 `checkpoints/<run_id>`，并在
 性能比较或论文证据；正式结果必须使用非 smoke 配置并按相同的结果目录与
 checkpoint 目录合计结构归档。
 
+## 源域特征贡献审计
+
+`models/feature_contribution_audit.py` 提供冻结分类器的源域后验审计。它将每个窗口的
+概率先按 `(condition_id, record_id)` 聚合为记录级概率，再逐维把特征替换为源域中位数，
+输出 NLL 增量和 Macro-F1 降幅。该报告只用于检验“特征价值是否对应分类贡献”，不改变
+模型权重、训练损失、颜色/价格映射或 3×3 打包，也不接收或读取目标域数据。
+
+```python
+from AGG_FWC.models import audit_source_feature_contributions
+
+report = audit_source_feature_contributions(
+    frozen_classifier,
+    source_features,
+    source_labels,
+    source_record_ids,
+    source_condition_ids,
+    device="cuda",
+    seed=2026,
+)
+```
+
+报告可用 `save_feature_contribution_audit` 保存为同名 `.npz` 数值文件和 `.json` 元数据；
+保存函数拒绝覆盖已有产物。只有源训练/源验证数据可以进入审计，目标集不得用于特征排序、
+阈值选择或结果筛选。
+
 ## Task8：严格 PU manifest 适配
 
 `datasets/strict_pu_adapter.py` 不会把旧版 `PU_bearing.data_load()` 产生的工况/故障类
