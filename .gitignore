@@ -7,7 +7,7 @@ __pycache__/
 *.py[cod]
 
 # Raw and derived datasets
-datasets/raw/
+datasets/
 datasets/**/*.mat
 datasets/**/*.xls
 datasets/**/*.xlsx
@@ -19,6 +19,7 @@ datasets/**/*.xlsx
 checkpoints/
 results/
 logs/
+runs/
 *.pt
 *.pth
 *.ckpt
@@ -31,4 +32,3 @@ logs/
 .vscode/
 .DS_Store
 Thumbs.db
-
