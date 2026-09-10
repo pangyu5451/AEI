@@ -6,11 +6,11 @@ __pycache__/
 .pytest_cache/
 *.py[cod]
 
-# Raw and derived datasets
-datasets/
+# Raw and derived datasets (dataset adapter source files remain trackable)
 datasets/**/*.mat
 datasets/**/*.xls
 datasets/**/*.xlsx
+datasets/**/raw/
 *.mat
 *.xls
 *.xlsx

@@ -113,7 +113,6 @@ def test_run_dependency_factory_uses_manifest_and_run_local_audit(tmp_path, monk
     dependencies = run_module.build_real_strict_dependencies(config)
     assert dependencies == {"sentinel": True}
     assert captured["config"] is config
-    assert str(captured["manifest_path"]).endswith(
-        "pu_condition_manifest_paper_condition.csv"
-    )
+    assert captured["manifest_path"] == config.result_dir / "pu_condition_manifest.csv"
+    assert captured["manifest_path"].is_file()
     assert captured["audit_path"] == config.result_dir / "protocol_audit.json"

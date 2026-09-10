@@ -7,6 +7,7 @@ import os
 import platform
 import textwrap
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -44,6 +45,45 @@ def test_parser_accepts_seed():
     args = build_parser().parse_args(["--seed", "2027"])
 
     assert args.seed == 2027
+
+
+def test_pu_transfer_task_resolves_source_and_target_conditions():
+    import AGG_FWC.run as run_module
+
+    captured = {}
+
+    def fake_manifest_builder(**kwargs):
+        captured.update(kwargs)
+        return SimpleNamespace()
+
+    def fake_dependency_builder(config, manifest_path, audit_path):
+        captured["dependency_manifest_path"] = manifest_path
+        captured["dependency_audit_path"] = audit_path
+        return {}
+
+    monkeypatch = pytest.MonkeyPatch()
+    try:
+        import AGG_FWC.datasets.build_pu_condition_manifest as manifest_module
+        import AGG_FWC.strict_pu_runtime as runtime_module
+
+        monkeypatch.setattr(manifest_module, "build_pu_condition_manifest", fake_manifest_builder)
+        monkeypatch.setattr(runtime_module, "build_strict_pu_fwc_dependencies", fake_dependency_builder)
+        config = SimpleNamespace(
+            data_name="PU",
+            transfer_task=[[0, 1, 2], 3],
+            data_root=Path("data") / "PU",
+            result_dir=Path("results") / "transfer-task-test",
+        )
+        run_module.build_real_strict_dependencies(config)
+    finally:
+        monkeypatch.undo()
+
+    assert captured.get("source_conditions") == (
+        "N09_M07_F10",
+        "N15_M01_F10",
+        "N15_M07_F04",
+    )
+    assert captured.get("target_condition") == "N15_M07_F10"
 
 
 def test_parser_accepts_smoke_flag():

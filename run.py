@@ -14,6 +14,14 @@ import numpy as np
 from AGG_FWC.config import build_config, prepare_artifact_dirs, save_config_snapshot
 
 
+PU_CONDITION_INDEX_TO_ID = {
+    0: "N09_M07_F10",
+    1: "N15_M01_F10",
+    2: "N15_M07_F04",
+    3: "N15_M07_F10",
+}
+
+
 def parse_transfer_task(value):
     try:
         task = ast.literal_eval(value)
@@ -35,6 +43,24 @@ def parse_transfer_task(value):
     if not isinstance(target, int):
         raise argparse.ArgumentTypeError("target condition must be an integer")
     return [source, target]
+
+
+def resolve_pu_transfer_conditions(transfer_task):
+    """Resolve the four PU condition indices used by the original dataset code."""
+
+    try:
+        source_indices, target_index = transfer_task
+        source_conditions = tuple(PU_CONDITION_INDEX_TO_ID[index] for index in source_indices)
+        target_condition = PU_CONDITION_INDEX_TO_ID[target_index]
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError(
+            "PU transfer_task must contain known condition indices 0, 1, 2, or 3"
+        ) from exc
+    if len(set(source_conditions)) != len(source_conditions):
+        raise ValueError("PU source conditions must be unique")
+    if target_condition in source_conditions:
+        raise ValueError("PU source and target conditions must be disjoint")
+    return source_conditions, target_condition
 
 
 def build_parser():
@@ -183,14 +209,24 @@ def build_strict_runner(config, dependencies=None):
 def build_real_strict_dependencies(config):
     """Build the real PU FWC dependencies for an explicit FWC run."""
 
-    project_root = Path(__file__).resolve().parent
-    manifest_path = (
-        project_root
-        / "runs"
-        / "task8-pu-paper-condition"
-        / "pu_condition_manifest_paper_condition.csv"
+    if config.data_name != "PU":
+        raise ValueError("real strict dependencies currently support only data_name='PU'")
+
+    source_conditions, target_condition = resolve_pu_transfer_conditions(
+        config.transfer_task
     )
+    manifest_path = Path(config.result_dir) / "pu_condition_manifest.csv"
     audit_path = Path(config.result_dir) / "protocol_audit.json"
+    from AGG_FWC.datasets.build_pu_condition_manifest import build_pu_condition_manifest
+
+    build_pu_condition_manifest(
+        data_root=config.data_root,
+        manifest_path=manifest_path,
+        audit_path=audit_path,
+        source_conditions=source_conditions,
+        target_condition=target_condition,
+        build_loader_bundle=False,
+    )
     from AGG_FWC.strict_pu_runtime import build_strict_pu_fwc_dependencies
 
     return build_strict_pu_fwc_dependencies(config, manifest_path, audit_path)
